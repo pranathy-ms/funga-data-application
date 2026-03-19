@@ -33,8 +33,6 @@ forest-productivity-analysis/
 ├── notebooks/
 │   ├── 01_data_pipeline_and_eda.ipynb
 │   └── 02_power_analysis.ipynb
-<>├── R/
-<> │   └── power_analysis.R       # Same simulation in R using lme4 + simr -->
 └── outputs/
     └── (generated figures and summary tables)
 ```
@@ -79,9 +77,7 @@ The ICC tells us whether sites are meaningfully different from each other. A hig
 **Why this matters:**
 Before investing in a multi-site, multi-year field trial, you need to know your experimental design can actually detect the effect you're hoping to find. A design with too few sites wastes time and money. A design with more sites than needed wastes resources. Power analysis finds the sweet spot.
 
-<>## R Script
 
-<>`R/power_analysis.R` implements the same Monte Carlo power simulation in R, providing a cross-language comparison. Uses base R for simulation and `ggplot2` for visualization.
 
 ## How to Run
 
@@ -99,8 +95,7 @@ pip install -r requirements.txt
 jupyter notebook notebooks/01_data_pipeline_and_eda.ipynb
 jupyter notebook notebooks/02_power_analysis.ipynb
 
-# 5. (Optional) Run R script
-Rscript R/power_analysis.R
+
 ```
 
 ## Dependencies
@@ -110,8 +105,6 @@ Rscript R/power_analysis.R
 - statsmodels (for ICC calculation)
 - jupyter
 
-**R:**
-- ggplot2
 
 ## Relevance
 
