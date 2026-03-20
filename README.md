@@ -15,21 +15,11 @@ This project demonstrates two things:
 ```
 forest-productivity-analysis/
 ├── README.md
+├── DESIGN_NOTES.md            # Decision log with reasoning
 ├── requirements.txt
 ├── data/
-│   ├── README.md              # Instructions for downloading FIA data
-│   ├── GA_TREE.csv            # (downloaded by user)
-│   ├── GA_PLOT.csv
-│   ├── GA_COND.csv
-│   ├── AL_TREE.csv
-│   ├── AL_PLOT.csv
-│   ├── AL_COND.csv
-│   ├── SC_TREE.csv
-│   ├── SC_PLOT.csv
-│   └── SC_COND.csv
-├── src/
-│   ├── data_loader.py         # ETL: loads, joins, and cleans FIA tables
-│   └── utils.py               # Shared helpers (ICC calculation, plotting)
+│   ├── download.py            # Downloads and extracts FIA data (run from project root)
+│   └── {STATE}_{TABLE}.csv    # Downloaded locally, gitignored
 ├── notebooks/
 │   ├── 01_data_pipeline_and_eda.ipynb
 │   └── 02_power_analysis.ipynb
@@ -42,16 +32,42 @@ forest-productivity-analysis/
 **USDA Forest Inventory & Analysis (FIA) Program**
 - URL: https://apps.fs.usda.gov/fia/datamart/datamart.html
 - States used: Georgia (GA), Alabama (AL), South Carolina (SC) — southeastern US, southern pine focus
-- Tables: TREE (individual tree measurements), PLOT (site coordinates and conditions), COND (stand characteristics)
-- The FIA program collects repeated measurements of permanent forest plots across the US, making it ideal for studying growth over time
+- The FIA program visits fixed forest plots on a repeating cycle and measures every tree, making it ideal for tracking growth over time
 
-See `data/README.md` for step-by-step download instructions.
+Run `python3 data/download.py` from the project root to download all state data automatically.
+
+### Data Model
+
+Three tables are used per state, joined as: `TREE → PLOT → COND`
+
+**TREE** — one row per tree per plot visit
+| Column | Meaning |
+|---|---|
+| `SPCD` | Species code (131=loblolly, 111=slash, 121=longleaf, 110=shortleaf pine) |
+| `STATUSCD` | 1=live (kept), 0/2/3=not in sample, dead, or removed (excluded) |
+| `DIA` | Trunk diameter measured at chest height (4.5 ft), in inches |
+| `PREVDIA` | Same measurement from the previous visit — null if first measurement |
+| `PLT_CN` | Links to PLOT (which plot visit this tree belongs to) |
+| `CONDID` | Links to COND (which forest patch within the plot this tree is in) |
+
+**PLOT** — one row per plot visit (a plot is a fixed ~1 acre forest location)
+| Column | Meaning |
+|---|---|
+| `REMPER` | Years since the last visit — used to annualize growth: `(DIA - PREVDIA) / REMPER` |
+| `LAT`, `LON`, `ELEV` | Location and elevation for environmental analysis |
+
+**COND** — one row per forest condition (patch type) per plot visit
+| Column | Meaning |
+|---|---|
+| `STDAGE` | Age of the dominant trees in this patch, in years. Null for non-forested patches |
+
+See `DESIGN_NOTES.md` for the full data dictionary and decision log.
 
 ## Notebook 1: Data Pipeline & Exploratory Analysis
 
 **What it does:**
 - Loads raw FIA CSVs for three states and joins TREE → PLOT → COND tables using the FIA key structure (CN, PLT_CN)
-- Filters to southern pine species (loblolly pine: species code 131, shortleaf pine: species code 110)
+- Filters to four southern pine species: loblolly (131), slash (111), longleaf (121), shortleaf pine (110)
 - Calculates annual diameter growth increment from repeated measurements
 - Handles missing values, outliers, and measurement inconsistencies
 - Explores the nested structure of the data: how much do growth rates vary between states, between sites within a state, and between trees within a site?
@@ -86,14 +102,16 @@ Before investing in a multi-site, multi-year field trial, you need to know your 
 git clone https://github.com/pranathy-ms/forest-productivity-analysis.git
 cd forest-productivity-analysis
 
-# 2. Download FIA data (see data/README.md for instructions)
+# 2. Download FIA data
+python3 data/download.py
 
 # 3. Install Python dependencies
 pip install -r requirements.txt
 
-# 4. Run notebooks in order
-jupyter notebook notebooks/01_data_pipeline_and_eda.ipynb
-jupyter notebook notebooks/02_power_analysis.ipynb
+# 4. Run notebooks in order (launch Jupyter from the notebooks/ directory)
+cd notebooks
+jupyter notebook 01_data_pipeline_and_eda.ipynb
+jupyter notebook 02_power_analysis.ipynb
 
 
 ```
@@ -113,11 +131,11 @@ This project demonstrates skills in:
 - **Exploratory analysis**: understanding nested variance structure in field data
 - **Experimental design**: Monte Carlo power analysis for multi-site trials
 - **Reproducible workflows**: documented pipeline from raw data to actionable insights
-- **Cross-language fluency**: Python + R implementations
+- **Reproducible data acquisition**: automated download pipeline from a public federal database
 
 ## Next Steps
 
 Potential extensions for deeper analysis:
-- Mixed-effects models (Python `statsmodels.MixedLM` / R `lme4::lmer`) to formally model the hierarchical structure
+- Mixed-effects models (`statsmodels.MixedLM`) to formally model the hierarchical structure
 - Spatial autocorrelation analysis between nearby plots
 - Integration of satellite-derived NDVI as a remote proxy for ground-truth growth measurements
