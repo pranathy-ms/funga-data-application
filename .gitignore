@@ -1,0 +1,13 @@
+# FIA data files (download via data/download.py)
+data/*.csv
+data/*.CSV
+data/*.zip
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+**/.ipynb_checkpoints/
+
+# Python
+__pycache__/
+*.pyc
+.env
