@@ -134,8 +134,59 @@ Track exactly how many rows are lost at each stage. If the final dataset is too 
 
 ---
 
+## Growth Computation & Distribution
+
+**Decision: Hard drop negative growth, keep near-zero**
+Negative annual growth (7,347 rows, 0.93%) is physically impossible for live trees (STATUSCD=1) — indicates measurement error. Hard dropped.
+
+Near-zero growth (<0.05 in/yr) accounts for 28.2% of the dataset (221k rows). Investigation showed two causes:
+- **REMPER artifact**: Trees with longer remeasurement gaps (median 8.2 yrs vs 6.3 yrs for faster-growing trees) have their absolute growth divided by a larger number, mechanically producing lower annual rates. The same 0.3-inch absolute growth over 8 years = 0.037 in/yr; over 5 years = 0.06 in/yr.
+- **Real biology**: Near-zero trees are smaller on average (median DIA 6.5 vs 8.7 inches) — likely suppressed understory trees or younger trees not yet in peak growth. These are valid data points, not errors.
+
+**Decision: No upper outlier threshold applied yet**
+Distribution has no natural break — smooth right-skewed tail to max 4.7 in/yr. The 2 in/yr common heuristic is far too lenient (only 784 rows above 1 in/yr). IQR fence lands at 0.67 in/yr. Proceeding with full cleaned dataset for EDA; will revisit if ICC/variance estimates appear distorted.
+
+---
+
+## EDA Findings
+
+### Growth by State
+**Expected:** Some regional variation — GA, AL, SC have different soils, rainfall patterns, and species mixes. But all three are in the southeastern coastal plain, so large differences would be surprising.
+
+**Found:** Nearly identical — AL 0.184, SC 0.161, GA 0.154 in/yr (medians within 0.03 of each other, overlapping IQR boxes). AL edges slightly higher, possibly reflecting soil or climate differences, but the three states are essentially comparable.
+
+**Implication:** Safe to pool across states for ICC and variance estimation without state-level adjustments. State is not a major confound for an experimental design across this region.
+
+---
+
+### Growth by Species
+**Expected:** Some species differences — pines vary in growth strategy. Plantation species (loblolly, slash) are bred and selected for fast growth. Ecological specialists (longleaf, shortleaf) prioritize stress tolerance over stem growth rate.
+
+**Found:** Clear ranking — loblolly (0.185) > slash (0.145) > longleaf (0.136) > shortleaf (0.103). Loblolly is ~1.8x faster than shortleaf and is also the most variable grower (widest IQR). Loblolly dominates the dataset (~71% of records, 555k rows).
+
+**Implication:** Species composition is a strong confound for any field trial. Two sites with different species mixes will have systematically different growth rates regardless of any treatment effect. A mycorrhizal inoculation trial should either control for species (same species at all sites) or include species as a covariate in the analysis. Loblolly dominance also means the overall variance structure is largely driven by loblolly behavior.
+
+---
+
+### Growth vs Stand Age
+**Expected:** A classic sigmoid growth curve — slow early establishment phase, rapid juvenile growth in the middle years, then a tapering off as trees approach their mature size and canopy competition intensifies.
+
+**Found:** Exactly this pattern. Growth is low at 0–10 years (0.077 in/yr) — seedlings establishing root systems — then jumps to peak at 10–30 years (0.20 in/yr), then declines steadily through maturity to ~0.07 in/yr at 110+ years. One anomaly: a bump at 90–100 years (0.149), likely noise from a small sample (7,681 records vs 120k+ in peak bins).
+
+**Implication:** Stand age is a strong site-level covariate. Field trial sites with different age structures will have different baseline growth rates. Matching sites by age (or including STDAGE as a covariate) is important for isolating a treatment effect. The peak growth window of 10–30 years is also the most relevant target for a mycorrhizal inoculation study — this is when the intervention would have the most measurable impact.
+
+---
+
+### Growth vs Elevation
+**Expected:** A declining trend with elevation — southern pines are warm-climate species. Higher elevations mean shorter growing seasons, colder winters, and often different soil types (rockier, shallower). We'd expect growth to drop as elevation increases.
+
+**Found:** Consistent decline from 0–1400 ft (0.167 → 0.130 in/yr). Above 2000 ft, sample sizes collapse to hundreds of records and the signal becomes unreliable. 93% of data is below 800 ft — confirming that southern pines naturally concentrate in the coastal plain and piedmont, not the mountains.
+
+**Implication:** Elevation is a meaningful site-level covariate, but practically speaking, a field trial in this region would almost certainly be sited below 800 ft where the species are abundant and data is reliable. The elevation effect is real but unlikely to be a practical design challenge if sites are chosen appropriately.
+
+---
+
 ## Open Questions / To Revisit
 
-- Outlier handling for growth: flag with `is_outlier` column or hard drop? (leaning toward flag so EDA can show the distribution before dropping)
-- What threshold makes sense for "unrealistic" annual diameter growth in southern pine? (common heuristic: >2 inches/year is suspicious)
+- Upper outlier threshold: IQR fence (0.67 in/yr) is data-derived but flags 1.4% of rows. Revisit after ICC estimation — if variance estimates look inflated, cap the upper tail.
 - Should outputs (ICC, variance estimates) be saved to `outputs/variance_params.json` for Notebook 2 to load cleanly, or referenced inline?
