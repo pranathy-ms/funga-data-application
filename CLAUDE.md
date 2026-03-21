@@ -14,8 +14,9 @@ Portfolio/assessment project — narrative and thought process matter as much as
 ```
 data/download.py                        # downloads FIA zips, extracts TREE/PLOT/COND per state
 data/{GA,AL,SC}_{TREE,PLOT,COND}.csv   # gitignored — download locally (all 9 files present)
-notebooks/01_data_pipeline_and_eda.ipynb  # in progress
-notebooks/02_power_analysis.ipynb         # not yet built
+notebooks/01_data_pipeline_and_eda.ipynb  # complete
+notebooks/02_power_analysis.ipynb         # complete (pending review)
+outputs/variance_params.json             # ICC + variance components from Notebook 1 → Notebook 2
 DESIGN_NOTES.md                           # full decision log with reasoning and data dictionary
 CLAUDE.md                                 # this file — quick reference
 ```
@@ -32,7 +33,8 @@ No `src/` module — all logic lives in notebooks.
 - **PREVDIA nulls**: drop for now — 433,465 (~44%) of filtered 991,354 rows. Nulls span all years (not just early) due to annual panel rotation. Recovery possible via `PREV_TRE_CN` self-join (not yet implemented). See DESIGN_NOTES.
 - **REMPER nulls**: drop — same structural reason as PREVDIA nulls
 - **REMPER=0**: 534 cases, all in 1970–1972 only — confirmed data artifact, drop
-- **Outlier handling**: TBD — leaning toward flagging with `is_outlier` column, not hard drop
+- **Outlier handling**: No hard cap applied — smooth right-skewed tail with no natural break. Negative growth hard-dropped (7,347 rows, measurement error). Near-zero retained (valid biology + REMPER artifact). Revisit if ICC estimates look inflated.
+- **outputs/variance_params.json**: ICC + variance components saved here for Notebook 2 to load
 
 ## Columns Loaded
 - **TREE**: `CN, PLT_CN, CONDID, SPCD, STATUSCD, DIA, PREVDIA, INVYR`
@@ -51,25 +53,34 @@ TREE.PLT_CN               → PLOT.CN
 TREE.PLT_CN + TREE.CONDID → COND.PLT_CN + COND.CONDID
 ```
 
-## Notebook 1 — Current State
-Sections built and executed:
-1. Imports + config (species dict, DATA_DIR)
+## Notebook 1 — Complete
+All 10 sections built and executed.
+
+1. Imports + config (species dict, DATA_DIR, OUTPUTS_DIR)
 2. Load raw CSVs with usecols — read and concat split into separate cells
 3. TREE exploration: dtypes/nulls, INVYR dist, STATUSCD counts, SPCD top 20
 4. PLOT exploration: dtypes/nulls, REMPER distribution
 5. COND exploration: dtypes/nulls, STDAGE describe
 6. Filter + join: 4,177,453 → 991,354 rows (0 dropped from joins, all from status+species filter)
 7. Edge case validation: PREVDIA nulls by INVYR, REMPER nulls by MEASYEAR, REMPER=0 by year
+8. Growth computation: drop nulls/REMPER=0/negatives → 785,988 rows; compute `annual_growth`
+9. EDA: growth by state (AL>SC>GA, ~0.03 spread), by species (loblolly>slash>longleaf>shortleaf), by stand age (sigmoid curve, peak 10–30yr), by elevation (declining, 93% below 800ft)
+10. Variance decomposition + save: `mixedlm("annual_growth ~ 1", groups=PLT_CN)` → ICC=0.62, saved to `outputs/variance_params.json`
 
-**Next cell to write**: growth computation — `(DIA - PREVDIA) / REMPER`, drop nulls/zeros, flag outliers
+## Notebook 2 — Complete (pending review)
+All 6 sections built and executed.
 
-## Notebook 2 — Not Started
-Uses variance estimates from Notebook 1: ICC + between-site/within-site variance components.
-Output from Notebook 1 → `outputs/variance_params.json` (TBD decision).
+1. Load variance params from `outputs/variance_params.json`
+2. Trial design + power formula: cluster-randomized design explained, formula derived
+3. Power curves: n_sites vs power for 10/20/30% effect sizes (m=20 trees/site)
+4. Trees-per-site sensitivity: m=5→30 saves <25 sites — trees per site is a weak lever
+5. ICC sensitivity: required sites vs ICC across effect sizes — site matching directly reduces burden
+6. Recommendation: narrative + planning table across ICC scenarios
 
 ## Key Data Findings
 - 991,354 live southern pine trees after filter + join (0 integrity issues)
-- 433,465 (~44%) have null PREVDIA → ~558k rows available for growth computation
+- 785,988 rows usable for growth computation (after dropping null PREVDIA/REMPER, REMPER=0, and negative growth)
 - REMPER=0 all in 1970–1972 (artifact), REMPER nulls spread across all years (panel rotation)
 - STDAGE nulls (~32% of COND) — non-forest conditions, only affects stand-age EDA
 - FIA switched from periodic to annual panel inventory ~2000 — explains INVYR distribution
+- **ICC = 0.62** (var_between=0.0215, var_within=0.0130) — 62% of growth variance is between plots (sites). Confirms plot is the experimental unit for a Funga field trial.

@@ -1,0 +1,9 @@
+{
+  "var_between": 0.02154164270791428,
+  "var_within": 0.013039196356681366,
+  "icc": 0.6229358017506557,
+  "mean_growth": 0.1881593581168509,
+  "n_rows": 785988,
+  "n_plots": 65513,
+  "notes": "Fit on annual_growth ~ 1 + (1|PLT_CN) via REML. var_between=between-plot, var_within=within-plot (residual)."
+}
