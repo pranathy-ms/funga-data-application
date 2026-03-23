@@ -224,18 +224,14 @@ The right approach is to ask: *what does the peer-reviewed literature say about 
 
 **What the literature shows:**
 
-The most relevant evidence comes from a 2025 meta-analysis — *"Ectomycorrhizal fungi inoculation of conifers increases growth, but not stress resistance"* (Forest Ecology and Management) — which synthesizes field trial results specifically for ECM inoculation on conifers (the fungal type that associates with pines). Key findings:
+A 2025 meta-analysis — *"Ectomycorrhizal fungi inoculation of conifers increases growth, but not stress resistance"* (Forest Ecology and Management) — synthesizes results from 32 studies on Pinus and Picea (the two genera that form ECM associations). The headline finding: ECM inoculation significantly increases conifer growth overall. Specific effect size distributions are not publicly available (paywalled), but the broader literature points to two consistent patterns:
 
-- **Effect size range across field trials: -12% to +48% growth improvement.** The wide range reflects genuine context-dependence: the same inoculant can accelerate growth on one site and underperform on another, depending on soil chemistry, existing native fungal communities, climate conditions, and seedling quality.
-- **Single-species commercial inoculants averaged ~+29%** growth improvement where effects were positive. However, a separate meta-analysis (*"Meta-analysis reveals globally sourced commercial mycorrhizal inoculants fall short"*, New Phytologist) found these products frequently fail entirely in field conditions — they're optimized for greenhouse performance, not real-world soil complexity.
-- **Consortium inoculants — mixtures of multiple fungal species — averaged ~+48%** growth improvement. Funga's approach (inoculating with whole native soil communities containing hundreds of microbial species, matched to the destination environment) is closer to this end of the spectrum.
+- **Effects are highly variable and context-dependent.** The same inoculant can produce meaningful growth gains on one site and negligible effects on another. Key moderating factors include the presence of native ECM fungi in the soil, soil chemistry, climate, and seedling quality at planting.
+- **Native ECM inoculum presence is the most important moderator.** Field studies consistently show larger and more persistent effects on sites where native ECM communities are absent or depleted (post-fire, fumigated nurseries, heavily degraded soils). On established forest sites with intact native fungal communities, initial inoculation advantages can disappear within a few growing seasons as native fungi colonize new root tips.
 
-**Additional context from specific pine field trials:**
-- *Pinus pinaster* (stone pine): Significant sustained height growth improvements persisting 3+ years after planting with ECM inoculation.
-- *Pinus radiata*: Growth improvements most pronounced on drier sites — consistent with Funga's hypothesis that fungal networks help trees access water and nutrients under stress.
-- *Pinus echinata* (shortleaf pine, one of our four focal species): Mixed results on degraded post-mining soils — shows that site context is critical and not all inoculation attempts succeed.
+The practical implication for trial design: Funga's intervention is most likely to produce detectable effects on new planting sites (reforestation, post-harvest) where the native fungal community has been disrupted, rather than in established standing forests.
 
-**Decision for Notebook 2:** Rather than fixing a single effect size, the power analysis will compute required sample sizes across a range: **10%, 20%, and 30% improvement in annual diameter growth** relative to control plots. This is more honest than picking one number and more useful — it shows Funga exactly how the tradeoff plays out at different effect magnitudes.
+**Decision for Notebook 2:** Rather than fixing a single effect size, the power analysis computes required sample sizes across a range: **10%, 20%, and 30% improvement in annual diameter growth** relative to control plots. These are planning scenarios that bracket realistic field expectations — not predictions from a single literature estimate. The analysis shows Funga how sample size requirements change across that range.
 
 ---
 
@@ -251,8 +247,6 @@ The standard FIA plot consists of four circular subplots, each with a radius of 
 Southern pine reforestation typically starts at **400–600 seedlings per acre**. However, not all seedlings survive, and as the stand matures, competition thins the tree count further. In a Funga field trial measuring trees 2–5 years after planting, the count of alive, measurable trees per plot would depend on seedling survival rate and plot size — both of which Funga would determine based on their operational protocol.
 
 **Decision for Notebook 2:** We treat trees per plot as a **parameter to explore** rather than a fixed input, since we don't have access to Funga's specific trial protocol. The power analysis will show results for a range (e.g., 10, 20, 30 trees per plot). Crucially, with ICC=0.62, we expect the required number of *plots* to be relatively insensitive to the number of *trees per plot* — adding trees per plot barely moves the needle. Demonstrating this is itself a useful finding: it means Funga's limiting resource is finding and setting up enough distinct sites, not measuring more trees per site.
-
----
 
 ---
 
@@ -279,11 +273,10 @@ Going from m=5 to m=30 trees/site reduces required sites by fewer than 25 (268 �
 **Finding 3 — Site matching directly reduces ICC and trial burden.**
 Holding total variance constant and varying ICC: required sites scale linearly with ICC. At ICC=0.30 (achievable with matched sites), a 30% effect needs 58 sites per arm (116 total). At the FIA estimate of 0.62, it's 110 per arm (220 total). Every investment in site selection is statistically equivalent to running a larger trial.
 
-**Recommendation:** Design trials targeting 20–30% growth improvement (consistent with ECM consortium literature). Prioritize site count over within-site measurement intensity. A pilot trial of 20–30 sites per arm would estimate the within-trial ICC and observed effect size, enabling a better-powered confirmatory trial.
+**Recommendation:** Design trials using 20–30% growth improvement as planning scenarios. Prioritize site count over within-site measurement intensity. A pilot trial of 20–30 sites per arm would estimate the within-trial ICC and observed effect size, enabling a better-powered confirmatory trial.
 
 ---
 
 ## Open Questions / To Revisit
 
 - Upper outlier threshold: IQR fence (0.67 in/yr) is data-derived but flags 1.4% of rows. Variance estimates (ICC=0.62) do not appear inflated — the between-plot dominance is biologically expected. No cap applied for now.
-- Notebook 2 recommendation narrative: pending review before finalizing.

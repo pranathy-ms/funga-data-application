@@ -61,14 +61,14 @@ All 10 sections built and executed.
 3. TREE exploration: dtypes/nulls, INVYR dist, STATUSCD counts, SPCD top 20
 4. PLOT exploration: dtypes/nulls, REMPER distribution
 5. COND exploration: dtypes/nulls, STDAGE describe
-6. Filter + join: 4,177,453 → 991,354 rows (0 dropped from joins, all from status+species filter)
+6. Filter + join: 4,177,453 → 1,271,080 rows (0 dropped from joins, all from status+species filter)
 7. Edge case validation: PREVDIA nulls by INVYR, REMPER nulls by MEASYEAR, REMPER=0 by year
 8. Growth computation: drop nulls/REMPER=0/negatives → 785,988 rows; compute `annual_growth`
 9. EDA: growth by state (AL>SC>GA, ~0.03 spread), by species (loblolly>slash>longleaf>shortleaf), by stand age (sigmoid curve, peak 10–30yr), by elevation (declining, 93% below 800ft)
 10. Variance decomposition + save: `mixedlm("annual_growth ~ 1", groups=PLT_CN)` → ICC=0.62, saved to `outputs/variance_params.json`
 
-## Notebook 2 — Complete (pending review)
-All 6 sections built and executed.
+## Notebook 2 — Complete
+All 6 sections built and executed. Six review issues fixed (see below).
 
 1. Load variance params from `outputs/variance_params.json`
 2. Trial design + power formula: cluster-randomized design explained, formula derived
@@ -77,8 +77,19 @@ All 6 sections built and executed.
 5. ICC sensitivity: required sites vs ICC across effect sizes — site matching directly reduces burden
 6. Recommendation: narrative + planning table across ICC scenarios
 
+## Review Fixes Applied
+- NB1 Cell 5: removed duplicate print loop
+- NB1 Cell 37: added PLT_CN per-visit nuance (ICC captures spatial + temporal clustering, appropriate for trial planning)
+- NB2 Cell 6: fixed 10% power curve x-axis bug — off-chart case now shows clean text box, all panels capped at x=300
+- NB2 Cell 12: summary table now uses exact `icc` variable (0.6229) for FIA row — outputs 247/110, consistent with markdown
+- NB2 Cell 11: "90%+" replaced with accurate "89–97%, depending on trees per site"
+- NB2 Cell 11 + DESIGN_NOTES: removed AMF-sourced effect size numbers (−12% to +48%, consortium ~+48%); replaced with planning scenario framing citing the 2025 FEM meta-analysis (ECM inoculation significantly increases Pinus/Picea growth; specific % varies by site conditions)
+
+## Remaining Tasks
+- Decide if project is ready to close and submit
+
 ## Key Data Findings
-- 991,354 live southern pine trees after filter + join (0 integrity issues)
+- 1,271,080 live southern pine trees after filter + join (0 integrity issues)
 - 785,988 rows usable for growth computation (after dropping null PREVDIA/REMPER, REMPER=0, and negative growth)
 - REMPER=0 all in 1970–1972 (artifact), REMPER nulls spread across all years (panel rotation)
 - STDAGE nulls (~32% of COND) — non-forest conditions, only affects stand-age EDA

@@ -24,7 +24,7 @@ forest-productivity-analysis/
 │   ├── 01_data_pipeline_and_eda.ipynb
 │   └── 02_power_analysis.ipynb
 └── outputs/
-    └── (generated figures and summary tables)
+    └── variance_params.json       # ICC + variance components (NB1 → NB2 handoff)
 ```
 
 ## Data Source
@@ -75,23 +75,24 @@ See `DESIGN_NOTES.md` for the full data dictionary and decision log.
 - Visualizations: growth distributions by site, growth vs environmental variables (elevation, stand age), variance decomposition
 
 **Why this matters:**
-The ICC tells us whether sites are meaningfully different from each other. A high ICC (say 0.3) means 30% of the variation in tree growth is explained by which site the tree is in — which means any experiment needs to account for this clustering. This directly motivates the power analysis in Notebook 2.
+The ICC tells us whether sites are meaningfully different from each other. The FIA data yields ICC = 0.62 — meaning 62% of the variation in tree growth is explained by which site the tree is in. Any field trial must account for this clustering when calculating required sample size. This directly motivates the power analysis in Notebook 2.
 
 ## Notebook 2: Power Analysis for Inoculation Trial Design
 
 **What it does:**
-- Uses the between-site and within-site variance estimated from the real FIA data in Notebook 1
-- Simulates a hypothetical mycorrhizal inoculation experiment: treatment plots (fungi added) vs control plots (no treatment) across multiple forest sites
-- Runs Monte Carlo simulations (1,000 iterations per design) to determine statistical power for different configurations:
-  - Number of sites: 5, 10, 15, 20
-  - Plots per site: 5, 10, 20
-  - Effect sizes: 10%, 15%, 20% growth increase
-- For each simulated experiment: generates treatment and control data with realistic variance, runs a t-test, records whether the effect was detected (p < 0.05)
-- Power = proportion of simulations where the effect was correctly detected
-- Produces **power curves**: x-axis = number of sites, y-axis = power, separate lines for different plots-per-site configurations, with a horizontal reference line at 80% power (standard threshold)
+- Loads variance components (ICC, σ²_between, σ²_within) estimated from FIA data in Notebook 1
+- Frames Funga's inoculation trial as a **cluster-randomized design**: sites are the experimental unit (randomized to treatment or control), trees are measurement units within sites
+- Derives the analytical power formula for two-arm cluster-randomized trials and computes required sites per arm at 80% power across effect size scenarios (10%, 20%, 30% growth improvement)
+- Explores two design levers: trees per site (sensitivity analysis shows this is a weak lever due to high ICC) and site matching (lower ICC directly reduces trial burden)
+- Produces **power curves**, a trees-per-site sensitivity plot, an ICC sensitivity plot, and a planning table
+
+**Key findings:**
+- At ICC = 0.62 and 20 trees/site: detecting a 20% effect requires ~247 sites/arm; a 30% effect requires ~110
+- Trees per site is nearly irrelevant — going from 5 to 30 trees saves fewer than 25 sites
+- Site matching (reducing ICC from 0.62 to 0.40) cuts required sites by ~33%, equivalent to running a much larger trial
 
 **Why this matters:**
-Before investing in a multi-site, multi-year field trial, you need to know your experimental design can actually detect the effect you're hoping to find. A design with too few sites wastes time and money. A design with more sites than needed wastes resources. Power analysis finds the sweet spot.
+Before investing in a multi-site, multi-year field trial, you need to know your experimental design can actually detect the effect you're hoping to find. With ICC = 0.62, the limiting resource is not measurement effort within sites — it is the number of distinct sites enrolled. Power analysis makes this tradeoff concrete.
 
 
 
@@ -129,13 +130,13 @@ jupyter notebook 02_power_analysis.ipynb
 This project demonstrates skills in:
 - **Ecological data wrangling**: ingesting and cleaning real USDA forest inventory data
 - **Exploratory analysis**: understanding nested variance structure in field data
-- **Experimental design**: Monte Carlo power analysis for multi-site trials
+- **Experimental design**: analytical power analysis for cluster-randomized trials
 - **Reproducible workflows**: documented pipeline from raw data to actionable insights
 - **Reproducible data acquisition**: automated download pipeline from a public federal database
 
 ## Next Steps
 
 Potential extensions for deeper analysis:
-- Mixed-effects models (`statsmodels.MixedLM`) to formally model the hierarchical structure
+- Recover PREVDIA nulls via `PREV_TRE_CN` self-join to increase usable row count (~44% currently dropped)
 - Spatial autocorrelation analysis between nearby plots
 - Integration of satellite-derived NDVI as a remote proxy for ground-truth growth measurements
